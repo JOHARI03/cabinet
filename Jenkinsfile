@@ -2,18 +2,29 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "cabinet-medical:latest"  // Nom local de l'image
+        DOCKER_IMAGE = "cabinet-medical:latest"
         PROJECT_DIR = "D:/projets/cabinet-medical"
         CONTAINER_NAME = "cabinet-medical-container"
         EMAIL_RECIPIENT = 'harivolahv@gmail.com'
-        HOST_PORT = "8084" // Port sur l'hôte
-        CONTAINER_PORT = "80" // Port dans le conteneur
+        HOST_PORT = "8084"
+        CONTAINER_PORT = "80"
+        NPM_DIR = "D:/npm"  // Répertoire npm personnalisé
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'master', url: 'https://github.com/JOHARI03/cabinet.git'
+            }
+        }
+
+        stage('Install Lighthouse') {
+            steps {
+                script {
+                    echo "Checking and installing Lighthouse..."
+                    bat "npm config set prefix ${env.NPM_DIR}"  // Configure npm pour utiliser un répertoire personnalisé
+                    bat "npm install -g lighthouse || exit 0"  // Installe Lighthouse si non installé
+                }
             }
         }
 
@@ -58,25 +69,11 @@ pipeline {
             }
         }
 
-        stage('Install Lighthouse') {
-            steps {
-                script {
-                    echo "Installing Lighthouse globally if not installed..."
-                    // Vérifier si Lighthouse est installé, sinon l'installer
-                    bat 'npm list -g lighthouse || npm install -g lighthouse'
-                }
-            }
-        }
-
         stage('Lighthouse Audit') {
             steps {
                 script {
                     echo "Running Lighthouse audit on the container..."
-
-                    // Exécuter Lighthouse pour tester l'URL de l'application (sur le port du conteneur)
                     bat "lighthouse http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
-                    
-                    // Sauvegarder le rapport dans un fichier
                     archiveArtifacts artifacts: 'lighthouse-report.html', allowEmptyArchive: true
                 }
             }
@@ -86,7 +83,6 @@ pipeline {
             steps {
                 script {
                     echo "Cleaning up Docker resources..."
-                    // Garder le conteneur actif, ne pas le supprimer ici
                     bat "docker system prune -f"
                 }
             }
