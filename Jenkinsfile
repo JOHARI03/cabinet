@@ -54,10 +54,6 @@ pipeline {
                     // Vérifier si le conteneur est actif avec le bon mappage de port
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
 
-                    // Attendre quelques secondes pour donner au conteneur le temps de démarrer
-                    echo "Waiting for the container to start..."
-                    bat "timeout /T 10 /NOBREAK"
-
                     // Test HTTP pour vérifier que le conteneur fonctionne correctement
                     echo "Testing HTTP connection..."
                     bat "curl http://localhost:${env.HOST_PORT} --max-time 10"
@@ -81,7 +77,7 @@ pipeline {
                     echo "Cleaning up Docker resources..."
                     // Garder le conteneur actif, ne pas le supprimer ici
                     bat "docker system prune -f"
-                    // Commenter ou enlever cette ligne pour éviter la suppression du conteneur
+                    // Supprimer la ligne suivante pour ne pas supprimer le conteneur
                     // bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
             }
