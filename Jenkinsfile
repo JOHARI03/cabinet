@@ -21,9 +21,9 @@ pipeline {
         stage('Install Lighthouse') {
             steps {
                 script {
-                    echo "Checking and installing Lighthouse..."
+                    echo "Installing Lighthouse globally..."
                     bat "npm config set prefix ${env.NPM_DIR}"  // Configure npm pour utiliser un répertoire personnalisé
-                    bat "npm install -g lighthouse || exit 0"  // Installe Lighthouse si non installé
+                    bat "npm install -g lighthouse"  // Installe Lighthouse globalement
                 }
             }
         }
@@ -73,7 +73,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Lighthouse audit on the container..."
-                    bat "lighthouse http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
+                    bat "npm run lighthouse -- http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
                     archiveArtifacts artifacts: 'lighthouse-report.html', allowEmptyArchive: true
                 }
             }
