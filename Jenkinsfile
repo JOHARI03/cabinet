@@ -181,8 +181,8 @@ pipeline {
         always {
             echo 'Nettoyage de l’espace de travail et des images Docker inutilisées...'
             cleanWs()
-            sh "docker container prune -f"
-            sh "docker image prune -f"
+            bat "docker container prune -f"
+            bat "docker image prune -f"
         }
     }
 }
