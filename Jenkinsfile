@@ -53,7 +53,11 @@ pipeline {
 
                     // Vérifier si le conteneur est actif avec le bon mappage de port
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
-                    
+
+                    // Attendre quelques secondes pour donner au conteneur le temps de démarrer
+                    echo "Waiting for the container to start..."
+                    sleep(10)
+
                     // Test HTTP pour vérifier que le conteneur fonctionne correctement
                     echo "Testing HTTP connection..."
                     bat "curl http://localhost:${env.HOST_PORT} --max-time 10"
