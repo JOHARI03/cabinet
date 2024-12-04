@@ -44,7 +44,7 @@ pipeline {
                     bat "docker rm ${env.CONTAINER_NAME} || exit 0"
 
                     // Lancer un nouveau conteneur avec le nom et le mappage de port spécifié
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8084:80 ${env.DOCKER_IMAGE}"
+                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8082:80 ${env.DOCKER_IMAGE}"
 
                     // Vérifier si le conteneur est actif avec le bon mappage de port
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
@@ -52,7 +52,7 @@ pipeline {
             }
             post {
                 success {
-                    echo "Docker container is running successfully on port 8084."
+                    echo "Docker container is running successfully on port 8082."
                 }
                 failure {
                     echo "Failed to run Docker container. Inspect logs below:"
