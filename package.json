@@ -1,0 +1,26 @@
+{
+  "name": "cabinet-medical",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:js": "eslint .",
+    "lint:css": "stylelint \"css/**/*.css\"",
+    "lint:html": "htmlhint .",
+    "lighthouse": "lighthouse http://localhost:8082 --view"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "eslint": "^9.16.0",
+    "globals": "^15.13.0",
+    "stylelint-config-standard": "^36.0.1"
+  },
+  "dependencies": {
+    "glob": "^11.0.0",
+    "inflight": "^1.0.6"
+  }
+}
