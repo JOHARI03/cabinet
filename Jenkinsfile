@@ -57,8 +57,7 @@ pipeline {
                 failure {
                     echo "Failed to run Docker container. Inspect logs below:"
                     bat "docker logs ${env.CONTAINER_NAME} || exit 0"
-                    currentBuild.result = 'ABORTED'  // Si l'étape échoue, on marque le pipeline comme 'ABORTED'
-                    error "Docker container failed to start."
+                    error "Docker container failed to start."  // Arrête le pipeline avec une erreur
                 }
             }
         }
