@@ -20,15 +20,9 @@ pipeline {
                 dir("${env.PROJECT_DIR}") {
                     script {
                         echo "Running lint checks..."
-                        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:js || exit 0'
-                        }
-                        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:css || exit 0'
-                        }
-                        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:html || exit 0'
-                        }
+                        bat 'npm run lint:js || exit 0'
+                        bat 'npm run lint:css || exit 0'
+                        bat 'npm run lint:html || exit 0'
                     }
                 }
             }
@@ -49,10 +43,10 @@ pipeline {
                     bat "docker stop ${env.CONTAINER_NAME} || exit 0"
                     bat "docker rm ${env.CONTAINER_NAME} || exit 0"
 
-                    // Lancer un nouveau conteneur
+                    // Lancer un nouveau conteneur avec le nom et le mappage de port spécifié
                     bat "docker run -d --name ${env.CONTAINER_NAME} -p 8084:80 ${env.DOCKER_IMAGE}"
 
-                    // Vérifier si le conteneur est actif
+                    // Vérifier si le conteneur est actif avec le bon mappage de port
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
                 }
             }
@@ -63,6 +57,8 @@ pipeline {
                 failure {
                     echo "Failed to run Docker container. Inspect logs below:"
                     bat "docker logs ${env.CONTAINER_NAME} || exit 0"
+                    currentBuild.result = 'ABORTED'  // Si l'étape échoue, on marque le pipeline comme 'ABORTED'
+                    error "Docker container failed to start."
                 }
             }
         }
@@ -91,6 +87,14 @@ pipeline {
             mail to: "$EMAIL_RECIPIENT",
                  subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                  body: """<h2 style='color: red;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a échoué.</h2>
+                          Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                 mimeType: 'text/html'
+        }
+        aborted {
+            echo 'Pipeline a été interrompu !'
+            mail to: "$EMAIL_RECIPIENT",
+                 subject: "ABORTÉ : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                 body: """<h2 style='color: orange;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a été interrompu (ABORTED).</h2>
                           Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
                  mimeType: 'text/html'
         }
