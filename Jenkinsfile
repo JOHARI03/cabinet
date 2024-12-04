@@ -43,30 +43,35 @@ pipeline {
             steps {
                 script {
                     echo "Stopping and removing any existing container..."
-                    // Supprimer tout conteneur existant avec le même nom
                     bat "docker stop ${env.CONTAINER_NAME} || exit 0"
                     bat "docker rm ${env.CONTAINER_NAME} || exit 0"
 
                     echo "Running Docker container..."
-                    // Lancer un nouveau conteneur avec le nom et le mappage de port spécifié
                     bat "docker run -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
 
-                    // Vérifier si le conteneur est actif avec le bon mappage de port
+                    echo "Checking if container is running with correct port mapping..."
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
 
-                    // Test HTTP pour vérifier que le conteneur fonctionne correctement
+                    echo "Waiting for the container to start..."
+                    bat "timeout /T 10 /NOBREAK"
+
                     echo "Testing HTTP connection..."
                     bat "curl http://localhost:${env.HOST_PORT} --max-time 10"
                 }
             }
-            post {
-                success {
-                    echo "Docker container is running successfully on port ${env.HOST_PORT}."
-                }
-                failure {
-                    echo "Failed to run Docker container. Inspect logs below:"
-                    bat "docker logs ${env.CONTAINER_NAME} || exit 0"
-                    error "Docker container failed to start."  // Arrête le pipeline avec une erreur
+        }
+
+        stage('Lighthouse Audit') {
+            steps {
+                script {
+                    echo "Running Lighthouse audit on the container..."
+
+                    // Exécuter Lighthouse pour tester l'URL de l'application (sur le port du conteneur)
+                    // Supposons que Lighthouse est déjà installé sur votre machine Jenkins
+                    bat "lighthouse http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
+                    
+                    // Sauvegarder le rapport dans un fichier
+                    archiveArtifacts artifacts: 'lighthouse-report.html', allowEmptyArchive: true
                 }
             }
         }
@@ -77,8 +82,6 @@ pipeline {
                     echo "Cleaning up Docker resources..."
                     // Garder le conteneur actif, ne pas le supprimer ici
                     bat "docker system prune -f"
-                    // Supprimer la ligne suivante pour ne pas supprimer le conteneur
-                    // bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
             }
         }
