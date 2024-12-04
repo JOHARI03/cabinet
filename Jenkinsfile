@@ -20,7 +20,7 @@ pipeline {
         stage('Install Lighthouse') {
             steps {
                 script {
-                    echo "Installing Lighthouse locally..."
+                    echo "Installing Lighthouse locally via npx..."
                     bat "npm install --save-dev lighthouse"  // Installe Lighthouse localement pour le projet
                 }
             }
@@ -93,7 +93,9 @@ pipeline {
             mail to: "$EMAIL_RECIPIENT",
                  subject: "SUCCÈS : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                  body: """<h2 style='color: green;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a terminé avec succès.</h2>
-                          Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                          Détails : <a href="${env.BUILD_URL}">Voir le build ici</a><br>
+                          <h3>Rapport Lighthouse</h3>
+                          <a href="${env.BUILD_URL}artifact/lighthouse-report.html">Télécharger le rapport Lighthouse</a>""",
                  mimeType: 'text/html'
         }
         failure {
@@ -113,8 +115,7 @@ pipeline {
                  mimeType: 'text/html'
         }
         always {
-            echo 'Nettoyage de l’espace de travail et des ressources Docker...'
-            cleanWs()
+            echo 'Nettoyage des ressources Docker sans supprimer l’espace de travail...'
             bat "docker container prune -f"
             bat "docker image prune -f"
         }
