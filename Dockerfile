@@ -14,7 +14,7 @@ RUN mkdir -p /var/log/apache2 && chown -R www-data:www-data /var/log/apache2
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Copier le fichier httpd.conf depuis le dossier du projet local dans le conteneur
-COPY D:/projets/cabinet-medical/httpd.conf /etc/apache2/httpd.conf
+COPY httpd.conf /etc/apache2/httpd.conf
 
 # Copier l'application locale dans le conteneur Docker
 COPY . /var/www/html
