@@ -6,6 +6,8 @@ pipeline {
         PROJECT_DIR = "D:/projets/cabinet-medical"
         CONTAINER_NAME = "cabinet-medical-container"
         EMAIL_RECIPIENT = 'harivolahv@gmail.com'
+        HOST_PORT = "8084" // Port sur l'hôte
+        CONTAINER_PORT = "80" // Port dans le conteneur
     }
 
     stages {
@@ -31,6 +33,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    echo "Building Docker image..."
                     bat "docker build -t ${env.DOCKER_IMAGE} ${env.PROJECT_DIR}"
                 }
             }
@@ -39,20 +42,26 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
+                    echo "Stopping and removing any existing container..."
                     // Supprimer tout conteneur existant avec le même nom
                     bat "docker stop ${env.CONTAINER_NAME} || exit 0"
                     bat "docker rm ${env.CONTAINER_NAME} || exit 0"
 
+                    echo "Running Docker container..."
                     // Lancer un nouveau conteneur avec le nom et le mappage de port spécifié
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8082:80 ${env.DOCKER_IMAGE}"
+                    bat "docker run -d --name ${env.CONTAINER_NAME} -p ${env.HOST_PORT}:${env.CONTAINER_PORT} ${env.DOCKER_IMAGE}"
 
                     // Vérifier si le conteneur est actif avec le bon mappage de port
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
+                    
+                    // Test HTTP pour vérifier que le conteneur fonctionne correctement
+                    echo "Testing HTTP connection..."
+                    bat "curl http://localhost:${env.HOST_PORT} --max-time 10"
                 }
             }
             post {
                 success {
-                    echo "Docker container is running successfully on port 8082."
+                    echo "Docker container is running successfully on port ${env.HOST_PORT}."
                 }
                 failure {
                     echo "Failed to run Docker container. Inspect logs below:"
@@ -65,6 +74,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 script {
+                    echo "Cleaning up Docker resources..."
                     bat "docker system prune -f"
                     bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
