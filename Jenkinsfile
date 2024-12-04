@@ -16,18 +16,10 @@ pipeline {
             }
             post {
                 success {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Checkout Success",
-                        body: "<p>Checkout stage passed successfully: <font color='green'>Success</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Checkout completed successfully."
                 }
                 failure {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Checkout Failed",
-                        body: "<p>Checkout stage failed: <font color='red'>Failure</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Checkout failed."
                 }
             }
         }
@@ -36,7 +28,7 @@ pipeline {
             steps {
                 dir("${env.PROJECT_DIR}") {
                     script {
-                        // Ignorer les erreurs avec "catchError" ou "|| true"
+                        // Ignorer les erreurs des tests pour continuer le pipeline
                         echo "Running lint:js (ESLint)..."
                         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                             bat 'npm run lint:js || true'
@@ -61,18 +53,10 @@ pipeline {
             }
             post {
                 unstable {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Static Analysis Unstable",
-                        body: "<p>Static analysis completed but with warnings: <font color='orange'>Unstable</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Static analysis completed with warnings."
                 }
                 failure {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Static Analysis Failed",
-                        body: "<p>Static analysis failed: <font color='red'>Failure</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Static analysis failed."
                 }
             }
         }
@@ -85,18 +69,10 @@ pipeline {
             }
             post {
                 success {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Image Built",
-                        body: "<p>Docker image built successfully: <font color='green'>Success</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Docker image built successfully."
                 }
                 failure {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Image Build Failed",
-                        body: "<p>Docker image build failed: <font color='red'>Failure</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Docker image build failed."
                 }
             }
         }
@@ -109,18 +85,10 @@ pipeline {
             }
             post {
                 success {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Container Running",
-                        body: "<p>Docker container is running on port 8083 successfully: <font color='green'>Success</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Docker container is running successfully."
                 }
                 failure {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Container Failed",
-                        body: "<p>Failed to run Docker container: <font color='red'>Failure</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Failed to run Docker container."
                 }
             }
         }
@@ -134,18 +102,10 @@ pipeline {
             }
             post {
                 success {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Image Pushed",
-                        body: "<p>Docker image pushed to local registry successfully: <font color='green'>Success</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Docker image pushed to local registry successfully."
                 }
                 failure {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Docker Image Push Failed",
-                        body: "<p>Failed to push Docker image to local registry: <font color='red'>Failure</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Failed to push Docker image to local registry."
                 }
             }
         }
@@ -159,23 +119,30 @@ pipeline {
             }
             post {
                 always {
-                    emailext(
-                        subject: "Build ${currentBuild.fullDisplayName} - Cleanup Done",
-                        body: "<p>Cleanup stage completed: <font color='blue'>Always</font></p>",
-                        to: "${env.EMAIL_RECIPIENT}"
-                    )
+                    echo "Cleanup stage completed."
                 }
             }
         }
     }
 
     post {
+        success {
+            mail to: "${env.EMAIL_RECIPIENT}",
+                 subject: "Build SUCCESS: ${currentBuild.fullDisplayName}",
+                 body: "The build completed successfully."
+        }
+        unstable {
+            mail to: "${env.EMAIL_RECIPIENT}",
+                 subject: "Build UNSTABLE: ${currentBuild.fullDisplayName}",
+                 body: "The build completed with some warnings or unstable results."
+        }
+        failure {
+            mail to: "${env.EMAIL_RECIPIENT}",
+                 subject: "Build FAILURE: ${currentBuild.fullDisplayName}",
+                 body: "The build failed. Please check the Jenkins logs for more details."
+        }
         always {
-            emailext(
-                subject: "Final Build Status: ${currentBuild.fullDisplayName} - ${currentBuild.currentResult}",
-                body: "<p>Build ${currentBuild.fullDisplayName} finished with status: <b><font color='${getColorForStatus(currentBuild.currentResult)}'>${currentBuild.currentResult}</font></b>.</p>",
-                to: "${env.EMAIL_RECIPIENT}"
-            )
+            echo "Build completed with status: ${currentBuild.currentResult}"
         }
     }
 }
