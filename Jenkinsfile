@@ -79,7 +79,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8083:80 ${env.DOCKER_IMAGE}"
+                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8084:80 ${env.DOCKER_IMAGE}"
                 }
             }
             post {
