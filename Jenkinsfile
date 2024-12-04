@@ -56,7 +56,7 @@ pipeline {
 
                     // Attendre quelques secondes pour donner au conteneur le temps de démarrer
                     echo "Waiting for the container to start..."
-                    sleep(10)
+                    bat "timeout /T 10 /NOBREAK"
 
                     // Test HTTP pour vérifier que le conteneur fonctionne correctement
                     echo "Testing HTTP connection..."
@@ -81,7 +81,7 @@ pipeline {
                     echo "Cleaning up Docker resources..."
                     // Garder le conteneur actif, ne pas le supprimer ici
                     bat "docker system prune -f"
-                    // Commente ou enlève cette ligne pour éviter la suppression du conteneur
+                    // Commenter ou enlever cette ligne pour éviter la suppression du conteneur
                     // bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
             }
