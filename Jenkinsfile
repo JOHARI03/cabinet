@@ -58,13 +58,22 @@ pipeline {
             }
         }
 
+        stage('Install Lighthouse') {
+            steps {
+                script {
+                    echo "Installing Lighthouse globally if not installed..."
+                    // Vérifier si Lighthouse est installé, sinon l'installer
+                    bat 'npm list -g lighthouse || npm install -g lighthouse'
+                }
+            }
+        }
+
         stage('Lighthouse Audit') {
             steps {
                 script {
                     echo "Running Lighthouse audit on the container..."
 
                     // Exécuter Lighthouse pour tester l'URL de l'application (sur le port du conteneur)
-                    // Supposons que Lighthouse est déjà installé sur votre machine Jenkins
                     bat "lighthouse http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
                     
                     // Sauvegarder le rapport dans un fichier
