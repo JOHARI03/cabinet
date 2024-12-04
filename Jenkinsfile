@@ -16,9 +16,19 @@ pipeline {
             post {
                 success {
                     echo "Checkout completed successfully."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "SUCCÈS : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: green;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a terminé avec succès.</h2>
+                                  Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                         mimeType: 'text/html'
                 }
                 failure {
                     echo "Checkout failed."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: red;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a échoué.</h2>
+                                  Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                         mimeType: 'text/html'
                 }
             }
         }
@@ -53,9 +63,19 @@ pipeline {
             post {
                 unstable {
                     echo "Static analysis completed with warnings."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "Avertissement : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: orange;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a terminé avec des avertissements.</h2>
+                                  Détails : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                         mimeType: 'text/html'
                 }
                 failure {
                     echo "Static analysis failed."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: red;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a échoué durant l'analyse statique.</h2>
+                                  Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                         mimeType: 'text/html'
                 }
             }
         }
@@ -69,9 +89,19 @@ pipeline {
             post {
                 success {
                     echo "Docker image built successfully."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "SUCCÈS : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: green;'>L'image Docker a été construite avec succès.</h2>
+                                  Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                         mimeType: 'text/html'
                 }
                 failure {
                     echo "Docker image build failed."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: red;'>La construction de l'image Docker a échoué.</h2>
+                                  Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                         mimeType: 'text/html'
                 }
             }
         }
@@ -85,9 +115,19 @@ pipeline {
             post {
                 success {
                     echo "Docker container is running successfully."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "SUCCÈS : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: green;'>Le conteneur Docker fonctionne avec succès.</h2>
+                                  Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                         mimeType: 'text/html'
                 }
                 failure {
                     echo "Failed to run Docker container."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2 style='color: red;'>Le conteneur Docker n'a pas pu démarrer.</h2>
+                                  Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                         mimeType: 'text/html'
                 }
             }
         }
@@ -102,6 +142,11 @@ pipeline {
             post {
                 always {
                     echo "Cleanup stage completed."
+                    mail to: "$EMAIL_RECIPIENT",
+                         subject: "Nettoyage terminé : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                         body: """<h2>Le nettoyage des ressources Docker est terminé.</h2>
+                                  Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                         mimeType: 'text/html'
                 }
             }
         }
@@ -109,28 +154,35 @@ pipeline {
 
     post {
         success {
-            emailext(
-                subject: "Build SUCCESS: ${currentBuild.fullDisplayName}",
-                body: "The build completed successfully.",
-                to: "${env.EMAIL_RECIPIENT}"
-            )
-        }
-        unstable {
-            emailext(
-                subject: "Build UNSTABLE: ${currentBuild.fullDisplayName}",
-                body: "The build completed with some warnings or unstable results.",
-                to: "${env.EMAIL_RECIPIENT}"
-            )
+            echo 'Pipeline terminé avec succès. Archivage des artefacts...'
+            archiveArtifacts artifacts: '**/*.min.css', allowEmptyArchive: true
+            mail to: "$EMAIL_RECIPIENT",
+                 subject: "SUCCÈS : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                 body: """<h2 style='color: green;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a terminé avec succès.</h2>
+                          Détails : <a href="${env.BUILD_URL}">Voir le build ici</a>""",
+                 mimeType: 'text/html'
         }
         failure {
-            emailext(
-                subject: "Build FAILURE: ${currentBuild.fullDisplayName}",
-                body: "The build failed. Please check the Jenkins logs for more details.",
-                to: "${env.EMAIL_RECIPIENT}"
-            )
+            echo 'Échec du pipeline.'
+            mail to: "$EMAIL_RECIPIENT",
+                 subject: "ÉCHEC : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                 body: """<h2 style='color: red;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a échoué.</h2>
+                          Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                 mimeType: 'text/html'
+        }
+        aborted {
+            echo 'Le pipeline a été annulé.'
+            mail to: "$EMAIL_RECIPIENT",
+                 subject: "ANNULATION : ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                 body: """<h2 style='color: orange;'>Le pipeline ${env.JOB_NAME} (Build #${env.BUILD_NUMBER}) a été annulé.</h2>
+                          Consultez les logs : <a href="${env.BUILD_URL}">Voir les logs ici</a>""",
+                 mimeType: 'text/html'
         }
         always {
-            echo "Build completed with status: ${currentBuild.currentResult}"
+            echo 'Nettoyage de l’espace de travail et des images Docker inutilisées...'
+            cleanWs()
+            sh "docker container prune -f"
+            sh "docker image prune -f"
         }
     }
 }
