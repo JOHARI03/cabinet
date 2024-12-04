@@ -52,9 +52,6 @@ pipeline {
                     echo "Checking if container is running with correct port mapping..."
                     bat "docker ps | findstr ${env.CONTAINER_NAME}"
 
-                    echo "Waiting for the container to start..."
-                    bat "timeout /T 10 /NOBREAK"
-
                     echo "Testing HTTP connection..."
                     bat "curl http://localhost:${env.HOST_PORT} --max-time 10"
                 }
