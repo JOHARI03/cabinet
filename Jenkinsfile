@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "cabinet-medical:latest"
+        DOCKER_IMAGE = "cabinet-medical:latest"  // Nom local de l'image
         PROJECT_DIR = "D:/projets/cabinet-medical"
-        DOCKER_REGISTRY = "localhost" // Ton registre local
         CONTAINER_NAME = "cabinet-medical-container"
         EMAIL_RECIPIENT = 'harivolahv@gmail.com'
     }
@@ -31,22 +30,22 @@ pipeline {
                         // Ignorer les erreurs des tests pour continuer le pipeline
                         echo "Running lint:js (ESLint)..."
                         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:js || true'
+                            bat 'npm run lint:js || exit 0'
                         }
 
                         echo "Running lint:css (Stylelint)..."
                         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:css || true'
+                            bat 'npm run lint:css || exit 0'
                         }
 
                         echo "Running lint:html (HTMLHint)..."
                         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lint:html || true'
+                            bat 'npm run lint:html || exit 0'
                         }
 
                         echo "Running Lighthouse..."
                         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat 'npm run lighthouse || true'
+                            bat 'npm run lighthouse || exit 0'
                         }
                     }
                 }
@@ -80,7 +79,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8083:80 ${env.DOCKER_IMAGE} || true"
+                    bat "docker run -d --name ${env.CONTAINER_NAME} -p 8083:80 ${env.DOCKER_IMAGE}"
                 }
             }
             post {
@@ -93,28 +92,11 @@ pipeline {
             }
         }
 
-        stage('Push to Local Registry') {
-            steps {
-                script {
-                    bat "docker tag ${env.DOCKER_IMAGE} ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE}"
-                    bat "docker push ${env.DOCKER_REGISTRY}/${env.DOCKER_IMAGE} || true"
-                }
-            }
-            post {
-                success {
-                    echo "Docker image pushed to local registry successfully."
-                }
-                failure {
-                    echo "Failed to push Docker image to local registry."
-                }
-            }
-        }
-
         stage('Cleanup') {
             steps {
                 script {
                     bat 'docker system prune -f'
-                    bat "docker rm -f ${env.CONTAINER_NAME} || true"
+                    bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
             }
             post {
@@ -127,19 +109,25 @@ pipeline {
 
     post {
         success {
-            mail to: "${env.EMAIL_RECIPIENT}",
-                 subject: "Build SUCCESS: ${currentBuild.fullDisplayName}",
-                 body: "The build completed successfully."
+            emailext(
+                subject: "Build SUCCESS: ${currentBuild.fullDisplayName}",
+                body: "The build completed successfully.",
+                to: "${env.EMAIL_RECIPIENT}"
+            )
         }
         unstable {
-            mail to: "${env.EMAIL_RECIPIENT}",
-                 subject: "Build UNSTABLE: ${currentBuild.fullDisplayName}",
-                 body: "The build completed with some warnings or unstable results."
+            emailext(
+                subject: "Build UNSTABLE: ${currentBuild.fullDisplayName}",
+                body: "The build completed with some warnings or unstable results.",
+                to: "${env.EMAIL_RECIPIENT}"
+            )
         }
         failure {
-            mail to: "${env.EMAIL_RECIPIENT}",
-                 subject: "Build FAILURE: ${currentBuild.fullDisplayName}",
-                 body: "The build failed. Please check the Jenkins logs for more details."
+            emailext(
+                subject: "Build FAILURE: ${currentBuild.fullDisplayName}",
+                body: "The build failed. Please check the Jenkins logs for more details.",
+                to: "${env.EMAIL_RECIPIENT}"
+            )
         }
         always {
             echo "Build completed with status: ${currentBuild.currentResult}"
