@@ -8,7 +8,6 @@ pipeline {
         EMAIL_RECIPIENT = 'harivolahv@gmail.com'
         HOST_PORT = "8084"
         CONTAINER_PORT = "80"
-        NPM_DIR = "D:/npm"  // Répertoire npm personnalisé
     }
 
     stages {
@@ -21,9 +20,8 @@ pipeline {
         stage('Install Lighthouse') {
             steps {
                 script {
-                    echo "Installing Lighthouse globally..."
-                    bat "npm config set prefix ${env.NPM_DIR}"  // Configure npm pour utiliser un répertoire personnalisé
-                    bat "npm install -g lighthouse"  // Installe Lighthouse globalement
+                    echo "Installing Lighthouse locally..."
+                    bat "npm install --save-dev lighthouse"  // Installe Lighthouse localement pour le projet
                 }
             }
         }
@@ -73,7 +71,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Lighthouse audit on the container..."
-                    bat "npm run lighthouse -- http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"
+                    bat "npx lighthouse http://localhost:${env.HOST_PORT} --output html --output-path ./lighthouse-report.html"  // Utilisation de npx
                     archiveArtifacts artifacts: 'lighthouse-report.html', allowEmptyArchive: true
                 }
             }
