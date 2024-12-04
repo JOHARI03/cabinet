@@ -79,8 +79,10 @@ pipeline {
             steps {
                 script {
                     echo "Cleaning up Docker resources..."
+                    // Garder le conteneur actif, ne pas le supprimer ici
                     bat "docker system prune -f"
-                    bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
+                    // Commente ou enlève cette ligne pour éviter la suppression du conteneur
+                    // bat "docker rm -f ${env.CONTAINER_NAME} || exit 0"
                 }
             }
         }
